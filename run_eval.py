@@ -25,6 +25,7 @@ from langchain_core.callbacks import get_usage_metadata_callback
 
 from my_agent.agent import run
 from my_agent.utils.nodes import PLANNER_MODEL
+from my_agent.utils.observability import flush_langfuse, langfuse_enabled
 from my_agent.utils.tools import OLLAMA_MODEL
 
 OUT_DIR = Path(__file__).parent / "eval_runs"
@@ -243,6 +244,7 @@ def main() -> None:
         f"Planner: {PLANNER_MODEL} (billed) | "
         f"Generation/judge: {OLLAMA_MODEL} (local, free)"
     )
+    print(f"Langfuse tracing: {'on' if langfuse_enabled() else 'off'}")
     print(f"Saving trajectories to: {OUT_DIR}")
     print(f"Running {len(scenarios)} of {len(SCENARIOS)} scenarios.\n")
 
@@ -336,6 +338,8 @@ def main() -> None:
         encoding="utf-8",
     )
     print(f"\nWrote {OUT_DIR / 'summary.json'} and per-scenario trajectories.")
+
+    flush_langfuse()  # send any pending traces before exit
 
 
 if __name__ == "__main__":

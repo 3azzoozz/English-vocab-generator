@@ -10,6 +10,7 @@ from langgraph.graph import StateGraph, START, END
 from langgraph.prebuilt import ToolNode
 
 from my_agent.utils.nodes import agent_node, route
+from my_agent.utils.observability import flush_langfuse, get_langfuse_callbacks
 from my_agent.utils.state import LessonState
 from my_agent.utils.tools import TOOLS
 
@@ -38,11 +39,25 @@ graph = build_graph()
 
 
 def run(topic: str, level: str, *, recursion_limit: int = 25) -> dict:
-    """Run the agent for one topic/level and return the final state."""
+    """Run the agent for one topic/level and return the final state.
+
+    If Langfuse is configured (see my_agent/utils/observability.py), the whole
+    run — planner and tool LLM calls — is traced automatically.
+    """
     user = f"Build a vocabulary lesson pack. Topic: {topic}. Student level: {level}."
+    config = {
+        "recursion_limit": recursion_limit,
+        "callbacks": get_langfuse_callbacks(),
+        "run_name": "lesson_prep_agent",
+        "metadata": {
+            "topic": topic,
+            "level": level,
+            "langfuse_tags": ["lesson-prep-agent", f"level:{level}"],
+        },
+    }
     return graph.invoke(
         {"messages": [("user", user)], "flagged_terms": []},
-        config={"recursion_limit": recursion_limit},
+        config=config,
     )
 
 
@@ -54,3 +69,4 @@ if __name__ == "__main__":
     final = run("food vocabulary", "A2")
     print(final["messages"][-1].content)
     print("\nAccumulated flagged terms:", final.get("flagged_terms"))
+    flush_langfuse()  # ensure the trace is sent before the script exits

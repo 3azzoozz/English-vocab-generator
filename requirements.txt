@@ -2,4 +2,5 @@ langgraph>=1.2,<2
 langchain-core>=1.5,<2
 langchain-anthropic>=1.5,<2
 langchain-ollama>=1.1,<2
+langfuse>=3,<5
 python-dotenv>=1.0

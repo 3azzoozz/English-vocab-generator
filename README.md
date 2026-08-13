@@ -82,6 +82,28 @@ ollama pull qwen2.5:3b
 
 Ollama must be running when you run the agent.
 
+**3. Langfuse (optional observability).** Add your Langfuse keys to `.env`:
+
+```bash
+LANGFUSE_SECRET_KEY=sk-lf-...
+LANGFUSE_PUBLIC_KEY=pk-lf-...
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+```
+
+If these are unset, the agent simply runs untraced — no errors.
+
+## Observability
+
+When Langfuse keys are present, every `run()` is traced to Langfuse: the planner
+(Claude) calls and the tools' local Ollama calls both appear, nested under one
+trace per lesson pack, tagged with the topic and CEFR level. The eval harness
+prints `Langfuse tracing: on/off` and flushes traces on exit.
+
+The wiring lives in [`my_agent/utils/observability.py`](my_agent/utils/observability.py)
+and degrades gracefully — a missing SDK or bad key disables tracing rather than
+breaking the run. `LANGFUSE_BASE_URL` (or the SDK's native `LANGFUSE_HOST`) both
+work.
+
 ## Run
 
 One lesson pack:
